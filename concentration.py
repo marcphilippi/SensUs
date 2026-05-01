@@ -2,39 +2,40 @@ import numpy as np
 import os
 from modelReader import Reader
 from dataProcessor import Processor
-import matplotlib.pyplot as plt
 
-filename = "D_creatinine_150"
-file_path = os.path.join(os.getcwd(),'Desktop','ETE',filename + '.csv' )
+#need test 
+
+filename = ""
+file_path =
+
 fit_A = 554.8316785598106
 fit_B = 1.294356863246618
 fit_C = -1272.5231509085318
-x = np.arange(10,305,5)
-#################################################################################################################################################
 
-def func(x, A, B,C):
-    return A * np.log(B * np.asarray(x)) + C
+true_concentration = 150 
 
+#load data and find the peak
 reader = Reader()
 processor = Processor()
 
 data = reader.readFile(file_path)
-
 peak = processor.findPeak(data)
-print("peak: " + str(peak))
-
 measurement = peak[1]
 print("measurement: " + str(measurement))
 
-ref_func = func(x,fit_A,fit_B,fit_C)
+# Konzentration berechnen
+concentration = np.exp((measurement - fit_C) / fit_A) / fit_B
+print("concentration: " + str(round(concentration, 2)) + " µM")
 
-min_distance = float('inf')
-min_idx = 0
-for idx in range(len(ref_func)):
-    if np.linalg.norm(ref_func[idx] - measurement) <= min_distance:
-        min_distance = np.linalg.norm(ref_func[idx] - measurement)
-        min_idx = idx
+# Scoring
+rel_error = abs(concentration - true_concentration) / true_concentration * 100
 
+if rel_error <= 10:
+    zone, points = "BLUE", 2
+elif rel_error <= 25:
+    zone, points = "GREEN", 1
+else:
+    zone, points = "GREY", 0
 
-concentration = x[min_idx]
-print("concentration: " + str(concentration) + " μM")
+print("rel. error: " + str(round(rel_error, 1)) + "%")
+print("zone: " + zone + " → " + str(points) + " Punkte")
